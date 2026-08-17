@@ -125,7 +125,8 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="C" Background="Transparent" CornerRadius="5" Padding="12,5" Margin="1">
+                    <!-- Square-ish padding: the content is now a glyph, not a text label. -->
+                    <Border x:Name="C" Background="Transparent" CornerRadius="5" Padding="8,6" Margin="1">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>

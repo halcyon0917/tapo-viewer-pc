@@ -36,12 +36,35 @@
                         Background="{StaticResource Control}" BorderBrush="{StaticResource Line}"
                         BorderThickness="1" CornerRadius="7" Padding="2">
                     <StackPanel Orientation="Horizontal">
-                        <RadioButton Style="{StaticResource Seg}" Content="1&#215;1" IsChecked="True"
-                                     Command="{Binding SetLayoutCommand}" CommandParameter="1" />
-                        <RadioButton Style="{StaticResource Seg}" Content="2&#215;2"
-                                     Command="{Binding SetLayoutCommand}" CommandParameter="2" />
-                        <RadioButton Style="{StaticResource Seg}" Content="3&#215;3"
-                                     Command="{Binding SetLayoutCommand}" CommandParameter="3" />
+                        <!--
+                            Icon-only, so each carries an explicit automation name and tooltip —
+                            a glyph with no accessible name is invisible to a screen reader.
+                            Fill tracks the button's Foreground so it follows hover and checked.
+                        -->
+                        <RadioButton Style="{StaticResource Seg}" IsChecked="True"
+                                     Command="{Binding SetLayoutCommand}" CommandParameter="1"
+                                     ToolTip="Single view"
+                                     AutomationProperties.Name="Single view">
+                            <controls:LayoutGlyph Columns="1"
+                                                  Fill="{Binding Foreground,
+                                                         RelativeSource={RelativeSource AncestorType=RadioButton}}" />
+                        </RadioButton>
+                        <RadioButton Style="{StaticResource Seg}"
+                                     Command="{Binding SetLayoutCommand}" CommandParameter="2"
+                                     ToolTip="2 &#215; 2 grid"
+                                     AutomationProperties.Name="Two by two grid">
+                            <controls:LayoutGlyph Columns="2"
+                                                  Fill="{Binding Foreground,
+                                                         RelativeSource={RelativeSource AncestorType=RadioButton}}" />
+                        </RadioButton>
+                        <RadioButton Style="{StaticResource Seg}"
+                                     Command="{Binding SetLayoutCommand}" CommandParameter="3"
+                                     ToolTip="3 &#215; 3 grid"
+                                     AutomationProperties.Name="Three by three grid">
+                            <controls:LayoutGlyph Columns="3"
+                                                  Fill="{Binding Foreground,
+                                                         RelativeSource={RelativeSource AncestorType=RadioButton}}" />
+                        </RadioButton>
                     </StackPanel>
                 </Border>
 
