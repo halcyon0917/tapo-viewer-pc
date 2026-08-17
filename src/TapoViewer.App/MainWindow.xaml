@@ -41,7 +41,7 @@
                             a glyph with no accessible name is invisible to a screen reader.
                             Fill tracks the button's Foreground so it follows hover and checked.
                         -->
-                        <RadioButton Style="{StaticResource Seg}" IsChecked="True"
+                        <RadioButton Style="{StaticResource Seg}"
                                      Command="{Binding SetLayoutCommand}" CommandParameter="1"
                                      ToolTip="Single view"
                                      AutomationProperties.Name="Single view">
@@ -49,7 +49,9 @@
                                                   Fill="{Binding Foreground,
                                                          RelativeSource={RelativeSource AncestorType=RadioButton}}" />
                         </RadioButton>
-                        <RadioButton Style="{StaticResource Seg}"
+                        <!-- Checked by default because MainViewModel.GridColumns starts at 2;
+                             marking 1x1 instead made the selector disagree with the wall. -->
+                        <RadioButton Style="{StaticResource Seg}" IsChecked="True"
                                      Command="{Binding SetLayoutCommand}" CommandParameter="2"
                                      ToolTip="2 &#215; 2 grid"
                                      AutomationProperties.Name="Two by two grid">

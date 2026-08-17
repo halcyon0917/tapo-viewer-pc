@@ -204,13 +204,142 @@
         </Setter>
     </Style>
 
+    <!--
+        Fully retemplated. The stock ComboBox is a white Aero control: on this ground the closed
+        box reads as a bright rectangle and the open list is white-on-white, so the preset names
+        are effectively invisible. Nothing short of replacing the template fixes that, because
+        the popup chrome ignores Background/Foreground.
+    -->
+    <Style x:Key="ComboItem" TargetType="ComboBoxItem">
+        <Setter Property="FontFamily" Value="{StaticResource Ui}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{StaticResource Ink}" />
+        <Setter Property="Padding" Value="10,6" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBoxItem">
+                    <Border x:Name="C" Background="Transparent" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsHighlighted" Value="True">
+                            <Setter TargetName="C" Property="Background" Value="{StaticResource ControlHover}" />
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="C" Property="Background" Value="#12345E" />
+                            <Setter Property="Foreground" Value="{StaticResource Accent}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style x:Key="Combo" TargetType="ComboBox">
         <Setter Property="FontFamily" Value="{StaticResource Ui}" />
         <Setter Property="FontSize" Value="11" />
         <Setter Property="Height" Value="24" />
-        <Setter Property="Background" Value="{StaticResource Control}" />
         <Setter Property="Foreground" Value="{StaticResource Ink}" />
-        <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="ItemContainerStyle" Value="{StaticResource ComboItem}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBox">
+                    <Grid>
+                        <ToggleButton x:Name="Toggle"
+                                      Focusable="False"
+                                      ClickMode="Press"
+                                      IsChecked="{Binding IsDropDownOpen,
+                                                  RelativeSource={RelativeSource TemplatedParent},
+                                                  Mode=TwoWay}">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border x:Name="B"
+                                            Background="{StaticResource Control}"
+                                            BorderBrush="{StaticResource Line}"
+                                            BorderThickness="1"
+                                            CornerRadius="5"
+                                            SnapsToDevicePixels="True">
+                                        <Path x:Name="Chevron"
+                                              Data="M 0 0 L 3.5 3.5 L 7 0"
+                                              Stroke="{StaticResource InkMuted}"
+                                              StrokeThickness="1.3"
+                                              StrokeEndLineCap="Round"
+                                              StrokeStartLineCap="Round"
+                                              HorizontalAlignment="Right"
+                                              VerticalAlignment="Center"
+                                              Margin="0,1,8,0" />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="B" Property="Background" Value="{StaticResource ControlHover}" />
+                                            <Setter TargetName="B" Property="BorderBrush" Value="{StaticResource LineStrong}" />
+                                            <Setter TargetName="Chevron" Property="Stroke" Value="{StaticResource Ink}" />
+                                        </Trigger>
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter TargetName="B" Property="BorderBrush" Value="{StaticResource Accent}" />
+                                            <Setter TargetName="Chevron" Property="Stroke" Value="{StaticResource Accent}" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+
+                        <ContentPresenter x:Name="Selection"
+                                          Content="{TemplateBinding SelectionBoxItem}"
+                                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                          Margin="9,0,22,0"
+                                          VerticalAlignment="Center"
+                                          HorizontalAlignment="Left"
+                                          IsHitTestVisible="False"
+                                          TextElement.Foreground="{StaticResource Ink}" />
+
+                        <!-- Without this the control is a blank box until something is chosen. -->
+                        <TextBlock x:Name="Hint"
+                                   Text="Preset"
+                                   Margin="9,0,22,0"
+                                   VerticalAlignment="Center"
+                                   FontFamily="{StaticResource Ui}"
+                                   FontSize="11"
+                                   Foreground="{StaticResource InkFaint}"
+                                   IsHitTestVisible="False"
+                                   Visibility="Collapsed" />
+
+                        <Popup x:Name="PART_Popup"
+                               Placement="Bottom"
+                               VerticalOffset="3"
+                               AllowsTransparency="True"
+                               PopupAnimation="Fade"
+                               IsOpen="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}">
+                            <Border Background="#161A21"
+                                    BorderBrush="{StaticResource LineStrong}"
+                                    BorderThickness="1"
+                                    CornerRadius="7"
+                                    Padding="4"
+                                    MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                    MaxHeight="240">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="14" ShadowDepth="2" Opacity="0.5" Color="Black" />
+                                </Border.Effect>
+                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <ItemsPresenter />
+                                </ScrollViewer>
+                            </Border>
+                        </Popup>
+                    </Grid>
+
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="SelectedItem" Value="{x:Null}">
+                            <Setter TargetName="Hint" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.4" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <!-- Status pill (MOTION, HD/SD) -->
