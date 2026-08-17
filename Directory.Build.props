@@ -1,0 +1,45 @@
+<Project>
+
+  <PropertyGroup>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <!--
+    Binary hardening. HighEntropyVA widens ASLR entropy on 64-bit; CetCompat marks the
+    apphost as compatible with hardware shadow stacks (Intel CET) so control-flow
+    hijacking in the native decoder path is harder to exploit.
+  -->
+  <PropertyGroup>
+    <HighEntropyVA>true</HighEntropyVA>
+    <CetCompat>true</CetCompat>
+    <!-- x64 only: libVLC ships native x64 binaries and we never want a WOW64 mismatch. -->
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <AnalysisModeSecurity>All</AnalysisModeSecurity>
+  </PropertyGroup>
+
+  <!--
+    Deliberately NOT TreatWarningsAsErrors=true (the CA rule set is too noisy to be a
+    useful gate). Instead: every nullability warning and every security-relevant CA rule
+    is a hard build failure. CA3075 = insecure DTD processing, CA5359 = disabled cert
+    validation, CA5364/CA5386/CA5398 = weak or unpinned TLS, CA5350-CA5351 = broken
+    crypto. These are exactly the mistakes that would turn this app into the hole we are
+    trying to avoid, so they must not be warnings anyone can scroll past.
+  -->
+  <PropertyGroup>
+    <WarningsAsErrors>
+      $(WarningsAsErrors);
+      CS8600;CS8602;CS8603;CS8604;CS8618;CS8625;
+      CA2100;CA3075;CA3077;CA5350;CA5351;CA5359;CA5364;CA5372;CA5379;CA5386;CA5390;CA5398
+    </WarningsAsErrors>
+  </PropertyGroup>
+
+</Project>

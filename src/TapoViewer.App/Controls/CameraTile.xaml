@@ -1,0 +1,200 @@
+<UserControl x:Class="TapoViewer.App.Controls.CameraTile"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:TapoViewer.App.Controls"
+             x:Name="Root">
+    <Border x:Name="PaneBorder"
+            Background="{StaticResource PaneBg}"
+            BorderBrush="{StaticResource Line}"
+            BorderThickness="1"
+            CornerRadius="8"
+            Margin="4"
+            ClipToBounds="True">
+        <Border.Style>
+            <Style TargetType="Border">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsMouseOver, ElementName=Root}" Value="True">
+                        <Setter Property="BorderBrush" Value="{StaticResource LineStrong}" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </Border.Style>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- ===== Header: identity and state, always legible ===== -->
+            <Border Grid.Row="0" Background="{StaticResource PaneChrome}" Padding="10,0" Height="32">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- Status dot. Pulses only while connecting, so a steady wall is still. -->
+                        <Ellipse x:Name="StatusDot" Width="7" Height="7" VerticalAlignment="Center">
+                            <Ellipse.Style>
+                                <Style TargetType="Ellipse">
+                                    <Setter Property="Fill" Value="{StaticResource InkFaint}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsLive}" Value="True">
+                                            <Setter Property="Fill" Value="{StaticResource Live}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding HasError}" Value="True">
+                                            <Setter Property="Fill" Value="{StaticResource Danger}" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsConnecting}" Value="True">
+                                            <Setter Property="Fill" Value="{StaticResource Accent}" />
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard x:Name="PulseBegin">
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                                         From="1.0" To="0.25" Duration="0:0:0.9"
+                                                                         AutoReverse="True"
+                                                                         RepeatBehavior="Forever" />
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.EnterActions>
+                                            <DataTrigger.ExitActions>
+                                                <StopStoryboard BeginStoryboardName="PulseBegin" />
+                                            </DataTrigger.ExitActions>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Ellipse.Style>
+                        </Ellipse>
+
+                        <TextBlock Text="{Binding DisplayName}" Style="{StaticResource T.Body}"
+                                   FontWeight="SemiBold" Margin="9,0,0,0" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding Address}" Style="{StaticResource T.Micro}"
+                                   Margin="8,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Border Style="{StaticResource Pill}" Background="{StaticResource Motion}"
+                                Visibility="{Binding IsMotionActive, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="MOTION" FontSize="9" FontWeight="Bold" Foreground="#1C1503" />
+                        </Border>
+                        <TextBlock Text="{Binding Status}" Style="{StaticResource T.Micro}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- ===== Video ===== -->
+            <Grid Grid.Row="1" Background="Black">
+                <!--
+                    Collapsed unless actually rendering. An HwndHost paints over WPF content in
+                    its rectangle, so the state panel below can only be seen if the surface is
+                    genuinely gone rather than merely behind it.
+                -->
+                <controls:VideoSurface x:Name="Surface"
+                                       Visibility="{Binding IsLive, Converter={StaticResource BoolToVisibility}}" />
+
+                <!-- ===== State panel: shown whenever there is no picture ===== -->
+                <Border Visibility="{Binding ShowStatePanel, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="380" Margin="20">
+                        <TextBlock Text="&#xE714;" FontFamily="{StaticResource Icons}" FontSize="26"
+                                   HorizontalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="{StaticResource InkFaint}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasError}" Value="True">
+                                            <Setter Property="Foreground" Value="{StaticResource Danger}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+
+                        <TextBlock Text="{Binding StateHeadline}" Style="{StaticResource T.Body}"
+                                   HorizontalAlignment="Center" Margin="0,10,0,0" />
+
+                        <TextBlock Text="{Binding Error}" Style="{StaticResource T.Muted}"
+                                   TextWrapping="Wrap" TextAlignment="Center" Margin="0,6,0,0"
+                                   Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}" />
+
+                        <Button Content="Retry" Style="{StaticResource Btn}"
+                                Command="{Binding ReconnectCommand}"
+                                HorizontalAlignment="Center" Margin="0,14,0,0"
+                                Visibility="{Binding IsConnecting, Converter={StaticResource InverseBoolToVisibility}}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- ===== Controls: quiet until the pane is hovered ===== -->
+            <Border Grid.Row="2" Background="{StaticResource PaneChrome}" Padding="8,0" Height="34">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Opacity" Value="0.5" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsMouseOver, ElementName=Root}" Value="True">
+                                <DataTrigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                             To="1.0" Duration="0:0:0.12" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </DataTrigger.EnterActions>
+                                <DataTrigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                             To="0.5" Duration="0:0:0.18" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </DataTrigger.ExitActions>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+
+                <Grid>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="{Binding QualityLabel}" Style="{StaticResource Btn}"
+                                Command="{Binding ToggleQualityCommand}" MinWidth="38" MinHeight="24"
+                                FontSize="11" Margin="0,0,8,0"
+                                ToolTip="Switch between stream1 (HD) and stream2 (SD)" />
+
+                        <TextBlock Style="{StaticResource T.Micro}" VerticalAlignment="Center">
+                            <Run Text="sandbox" />
+                            <Run Text="{Binding DecoderIntegrity, Mode=OneWay}" Foreground="{StaticResource InkMuted}" />
+                        </TextBlock>
+                    </StackPanel>
+
+                    <!-- PTZ, only for cameras that advertise it -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                Visibility="{Binding SupportsPtz, Converter={StaticResource BoolToVisibility}}">
+                        <Button Content="&#x25C0;" Style="{StaticResource PtzKey}"
+                                Command="{Binding MoveCommand}" CommandParameter="left" ToolTip="Pan left" />
+                        <Button Content="&#x25B2;" Style="{StaticResource PtzKey}"
+                                Command="{Binding MoveCommand}" CommandParameter="up" ToolTip="Tilt up" />
+                        <Button Content="&#x25BC;" Style="{StaticResource PtzKey}"
+                                Command="{Binding MoveCommand}" CommandParameter="down" ToolTip="Tilt down" />
+                        <Button Content="&#x25B6;" Style="{StaticResource PtzKey}"
+                                Command="{Binding MoveCommand}" CommandParameter="right" ToolTip="Pan right" />
+                        <Button Content="&#x25A0;" Style="{StaticResource PtzKey}" Margin="7,0,0,0"
+                                Command="{Binding StopMoveCommand}" ToolTip="Stop movement" />
+
+                        <ComboBox ItemsSource="{Binding Presets}" SelectedItem="{Binding SelectedPreset}"
+                                  DisplayMemberPath="Name" Style="{StaticResource Combo}"
+                                  MinWidth="104" Margin="10,0,4,0"
+                                  ToolTip="Presets stored on the camera" />
+                        <Button Content="Go" Style="{StaticResource Btn}" MinHeight="24" FontSize="11"
+                                Command="{Binding GotoPresetCommand}" Margin="0" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button Content="&#xE72C;" Style="{StaticResource IconBtn}"
+                                Command="{Binding ReconnectCommand}" ToolTip="Reconnect" />
+                        <Button Content="&#xE713;" Style="{StaticResource IconBtn}"
+                                Command="{Binding EditCommand}" ToolTip="Edit this camera" />
+                        <Button Content="&#xE74D;" Style="{StaticResource IconBtn}"
+                                Command="{Binding RemoveCommand}" ToolTip="Remove this camera" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>

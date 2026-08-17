@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\TapoViewer.Core\TapoViewer.Core.csproj" />
+  </ItemGroup>
+
+  <!--
+    Plain references, deliberately. PrivateAssets="all" looks like the right way to stop libVLC
+    leaking into consumers, but "all" includes the runtime asset, which excludes LibVLCSharp.dll
+    from this project's OWN publish output and leaves the decoder throwing FileNotFoundException
+    at startup. Containment is achieved by TapoViewer.App having no ProjectReference to this
+    project at all — see the comment there.
+  -->
+  <ItemGroup>
+    <PackageReference Include="LibVLCSharp" Version="3.10.1" />
+    <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.23.1" />
+  </ItemGroup>
+
+  <!--
+    Console subsystem, and deliberately NOT WPF. This process exists to be the blast radius for
+    a malformed-stream exploit, so it carries as little as possible: no XAML stack, no managed UI
+    framework. libVLC renders straight into a bare Win32 HWND that the parent reparents into its
+    own window. The parent launches it with CREATE_NO_WINDOW so no console ever appears.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

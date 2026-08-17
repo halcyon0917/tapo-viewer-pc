@@ -1,0 +1,121 @@
+<Window x:Class="TapoViewer.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:TapoViewer.App.Controls"
+        Title="Tapo Viewer"
+        Height="760"
+        Width="1220"
+        MinHeight="440"
+        MinWidth="720"
+        Background="{StaticResource Bg}"
+        TextOptions.TextFormattingMode="Ideal"
+        UseLayoutRounding="True">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- ===== Command bar ===== -->
+        <Border Grid.Row="0" Background="{StaticResource BarBg}" BorderBrush="{StaticResource Line}"
+                BorderThickness="0,0,0,1" Padding="12,9">
+            <Grid>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Cameras" Style="{StaticResource T.Title}" VerticalAlignment="Center" />
+                    <Border Style="{StaticResource Pill}" Margin="10,0,0,0">
+                        <TextBlock Text="{Binding Cameras.Count}" Style="{StaticResource T.Micro}"
+                                   Foreground="{StaticResource InkMuted}" />
+                    </Border>
+                </StackPanel>
+
+                <!-- Layout selector, centred so it reads as a view control rather than an action -->
+                <Border HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Background="{StaticResource Control}" BorderBrush="{StaticResource Line}"
+                        BorderThickness="1" CornerRadius="7" Padding="2">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton Style="{StaticResource Seg}" Content="1&#215;1" IsChecked="True"
+                                     Command="{Binding SetLayoutCommand}" CommandParameter="1" />
+                        <RadioButton Style="{StaticResource Seg}" Content="2&#215;2"
+                                     Command="{Binding SetLayoutCommand}" CommandParameter="2" />
+                        <RadioButton Style="{StaticResource Seg}" Content="3&#215;3"
+                                     Command="{Binding SetLayoutCommand}" CommandParameter="3" />
+                    </StackPanel>
+                </Border>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Content="Reconnect all" Style="{StaticResource Btn}"
+                            Command="{Binding ConnectAllCommand}" />
+                    <Button Content="+ Add camera" Style="{StaticResource Btn.Accent}"
+                            Command="{Binding AddCameraCommand}" Margin="0" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ===== Banner ===== -->
+        <Border Grid.Row="1" Background="#1E1708" BorderBrush="#3A2C0C" BorderThickness="0,0,0,1"
+                Padding="14,9"
+                Visibility="{Binding HasBanner, Converter={StaticResource BoolToVisibility}}">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="&#xE7BA;" FontFamily="{StaticResource Icons}" FontSize="13"
+                           Foreground="{StaticResource Motion}" VerticalAlignment="Top" Margin="0,1,10,0" />
+                <TextBlock Text="{Binding Banner}" Style="{StaticResource T.Muted}"
+                           Foreground="{StaticResource Ink}" TextWrapping="Wrap" MaxWidth="900" />
+            </StackPanel>
+        </Border>
+
+        <!-- ===== Wall ===== -->
+        <ItemsControl Grid.Row="2" ItemsSource="{Binding Cameras}" Margin="6"
+                      ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Columns="{Binding DataContext.GridColumns,
+                                                   RelativeSource={RelativeSource AncestorType=Window}}" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <controls:CameraTile />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- ===== First run ===== -->
+        <Border Grid.Row="2" Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}">
+            <Border Background="{StaticResource PaneBg}" BorderBrush="{StaticResource Line}"
+                    BorderThickness="1" CornerRadius="10"
+                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Padding="44,36" MaxWidth="440">
+                <StackPanel>
+                    <TextBlock Text="&#xE714;" FontFamily="{StaticResource Icons}" FontSize="30"
+                               Foreground="{StaticResource InkFaint}" HorizontalAlignment="Center" />
+                    <TextBlock Text="No cameras yet" Style="{StaticResource T.Title}"
+                               HorizontalAlignment="Center" Margin="0,14,0,0" />
+                    <TextBlock Style="{StaticResource T.Muted}" HorizontalAlignment="Center"
+                               TextAlignment="Center" TextWrapping="Wrap" Margin="0,8,0,0"
+                               Text="Add a camera on your local network. You'll need its Camera Account — set it in the Tapo app under Device Settings → Advanced Settings → Camera Account." />
+                    <Button Content="+ Add camera" Style="{StaticResource Btn.Accent}"
+                            Command="{Binding AddCameraCommand}"
+                            HorizontalAlignment="Center" Margin="0,18,0,0" />
+                </StackPanel>
+            </Border>
+        </Border>
+
+        <!-- ===== Status bar ===== -->
+        <Border Grid.Row="3" Background="{StaticResource BarBg}" BorderBrush="{StaticResource Line}"
+                BorderThickness="0,1,0,0" Padding="12,6">
+            <Grid>
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse Width="6" Height="6" Fill="{StaticResource Live}" VerticalAlignment="Center" />
+                    <TextBlock Text="LAN only · decoders sandboxed at low integrity"
+                               Style="{StaticResource T.Micro}" Margin="8,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+                <TextBlock Text="{Binding ConfigPath, Mode=OneWay}" Style="{StaticResource T.Micro}"
+                           HorizontalAlignment="Right" VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis" MaxWidth="520" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

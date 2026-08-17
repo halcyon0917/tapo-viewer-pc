@@ -1,0 +1,141 @@
+<Window x:Class="TapoViewer.App.Dialogs.CameraEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Camera"
+        Height="560"
+        Width="520"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Background="{StaticResource Bg}">
+
+    <Window.Resources>
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource Ink}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,0,4" />
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="{StaticResource Control}" />
+            <Setter Property="Foreground" Value="{StaticResource Ink}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+            <Setter Property="CaretBrush" Value="{StaticResource Ink}" />
+            <Setter Property="Padding" Value="6,4" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+        </Style>
+        <Style TargetType="PasswordBox">
+            <Setter Property="Background" Value="{StaticResource Control}" />
+            <Setter Property="Foreground" Value="{StaticResource Ink}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+            <Setter Property="CaretBrush" Value="{StaticResource Ink}" />
+            <Setter Property="Padding" Value="6,4" />
+            <Setter Property="Margin" Value="0,0,0,4" />
+        </Style>
+        <Style x:Key="Hint" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource InkMuted}" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+
+                <TextBlock Text="Name" />
+                <TextBox x:Name="NameBox" />
+
+                <TextBlock Text="Address (LAN IP or hostname)" />
+                <TextBox x:Name="HostBox" />
+                <TextBlock Style="{StaticResource Hint}"
+                           Text="Must be a private address — 10.x, 172.16-31.x, 192.168.x. Public addresses are refused: use a VPN for remote access." />
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="14" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="RTSP port" />
+                        <TextBox x:Name="RtspPortBox" Text="554" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="ONVIF port" />
+                        <TextBox x:Name="OnvifPortBox" Text="2020" />
+                    </StackPanel>
+                </Grid>
+
+                <Border Background="{StaticResource Control}"
+                        BorderBrush="{StaticResource Line}"
+                        BorderThickness="1"
+                        CornerRadius="4"
+                        Padding="12"
+                        Margin="0,4,0,12">
+                    <StackPanel>
+                        <TextBlock Text="Camera Account" FontWeight="SemiBold" />
+                        <TextBlock Style="{StaticResource Hint}"
+                                   Text="From the Tapo app: Device Settings → Advanced Settings → Camera Account. This is NOT your TP-Link cloud login." />
+
+                        <TextBlock Text="Username" />
+                        <TextBox x:Name="UserBox" />
+
+                        <TextBlock Text="Password" />
+                        <PasswordBox x:Name="PasswordBox" />
+                        <TextBlock x:Name="PasswordHint"
+                                   Style="{StaticResource Hint}"
+                                   Text="Stored in Windows Credential Manager, never in this app's config file." />
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="Preferred quality" />
+                <ComboBox x:Name="QualityBox" Margin="0,0,0,12" SelectedIndex="0">
+                    <ComboBoxItem Content="HD — stream1" />
+                    <ComboBoxItem Content="SD — stream2" />
+                </ComboBox>
+
+                <CheckBox x:Name="MotionBox"
+                          Content="Enable motion event notifications"
+                          Foreground="{StaticResource Ink}"
+                          Margin="0,0,0,4" />
+                <TextBlock Style="{StaticResource Hint}"
+                           Text="Uses outbound pull-point subscriptions. No inbound ports are opened." />
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Test result / validation message -->
+        <Border Grid.Row="1"
+                x:Name="MessagePanel"
+                Visibility="Collapsed"
+                CornerRadius="4"
+                Padding="10,8"
+                Margin="0,4,0,12">
+            <TextBlock x:Name="MessageText" TextWrapping="Wrap" Margin="0" />
+        </Border>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="TestButton"
+                    Content="Test connection"
+                    Style="{StaticResource Btn}"
+                    Click="OnTestClick" />
+            <Button x:Name="SaveButton"
+                    Content="Save"
+                    Style="{StaticResource Btn}"
+                    Click="OnSaveClick"
+                    MinWidth="80" />
+            <Button Content="Cancel"
+                    Style="{StaticResource Btn}"
+                    Click="OnCancelClick"
+                    IsCancel="True"
+                    MinWidth="80"
+                    Margin="0" />
+        </StackPanel>
+    </Grid>
+</Window>

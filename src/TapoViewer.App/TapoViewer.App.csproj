@@ -1,0 +1,76 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\TapoViewer.Core\TapoViewer.Core.csproj" />
+  </ItemGroup>
+
+  <!--
+    There is deliberately NO ProjectReference to TapoViewer.Decoder.
+
+    A ProjectReference — even with ReferenceOutputAssembly="false", ExcludeAssets and
+    PrivateAssets — still drags the decoder's copy-to-output content into this project, because
+    MSBuild's content traversal predates and ignores those NuGet-level flags. That planted the
+    entire 279 MB libvlc\ tree next to TapoViewer.App.exe: wasted space, and native decoder
+    surface sitting in the privileged process's own directory, which is precisely what splitting
+    the processes was meant to prevent.
+
+    So the build-order dependency is expressed directly with the MSBuild task instead, which
+    builds the decoder without importing anything from it.
+  -->
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+
+    <!--
+      Overrides the solution-wide default. WPF's font-cache layer constructs CultureInfo("en")
+      during text layout, which throws under globalization-invariant mode and takes down the
+      process on the first TextBlock measure. Invariant mode stays on for the console tools.
+    -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+
+    <!--
+      Multi-resolution icon (16/20/24/32/40/48/64/128/256). Windows picks a different frame for
+      the taskbar, Alt-Tab, the title bar and Explorer's various view modes, so a single large
+      image scaled down looks soft in most of them. Regenerate with assets\generate-icon.ps1.
+    -->
+    <ApplicationIcon>Assets\TapoViewer.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <!--
+    Stage a complete decoder deployment under decoder\ so the app has a real one to launch
+    rather than the orphaned apphost MSBuild drops in the output root. SkipUnchangedFiles keeps
+    this cheap after the first build despite libVLC's size.
+  -->
+  <PropertyGroup>
+    <DecoderBuildDir>$(MSBuildThisFileDirectory)..\TapoViewer.Decoder\bin\$(Configuration)\net8.0-windows\</DecoderBuildDir>
+  </PropertyGroup>
+
+  <!--
+    Debug only. Release layout is owned by publish.ps1, which publishes the decoder into its own
+    RID-specific self-contained folder; staging a non-RID build over that would layer two
+    different deployments on top of each other.
+  -->
+  <Target Name="BuildDecoderForDevLoop"
+          BeforeTargets="BeforeBuild"
+          Condition="'$(Configuration)' == 'Debug'">
+    <MSBuild Projects="$(MSBuildThisFileDirectory)..\TapoViewer.Decoder\TapoViewer.Decoder.csproj"
+             Targets="Build"
+             Properties="Configuration=$(Configuration)" />
+  </Target>
+
+  <Target Name="StageDecoderPayload"
+          AfterTargets="Build"
+          Condition="'$(Configuration)' == 'Debug' And Exists('$(DecoderBuildDir)')">
+    <ItemGroup>
+      <DecoderPayload Include="$(DecoderBuildDir)**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(DecoderPayload)"
+          DestinationFiles="@(DecoderPayload->'$(OutDir)decoder\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

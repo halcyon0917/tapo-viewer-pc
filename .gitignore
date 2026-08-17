@@ -1,0 +1,61 @@
+# ---------------------------------------------------------------------------
+# Build output
+# ---------------------------------------------------------------------------
+bin/
+obj/
+artifacts/
+publish/
+TestResults/
+*.binlog
+*.log
+
+# ---------------------------------------------------------------------------
+# Anything that could carry camera credentials, LAN topology, or device state
+#
+# The app deliberately keeps all of this under %LOCALAPPDATA%\TapoViewer and
+# never inside the repo, so these patterns are defence in depth: they matter
+# the moment someone copies a real config in to reproduce a bug.
+#
+# cameras.json holds no passwords by design (they live in Windows Credential
+# Manager) but it does reveal internal addresses, ports and camera names.
+# ---------------------------------------------------------------------------
+cameras.json
+cameras.json.bak
+cameras.json.tmp
+cameras.json.*
+app.log
+secrets/
+
+# ---------------------------------------------------------------------------
+# Key material and environment files. None exist today; these exist so an
+# accidental `git add -A` after dropping a cert in the tree cannot commit it.
+# ---------------------------------------------------------------------------
+*.pfx
+*.snk
+*.p12
+*.pem
+*.key
+*.env
+.env
+.env.*
+
+# ---------------------------------------------------------------------------
+# Local tooling state. settings.local.json records absolute paths and the
+# developer's Windows username; settings.json (shared config) is fine to commit.
+# ---------------------------------------------------------------------------
+.claude/settings.local.json
+*.local.json
+
+# ---------------------------------------------------------------------------
+# IDE and OS noise
+# ---------------------------------------------------------------------------
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.DotSettings.user
+.DS_Store
+Thumbs.db
